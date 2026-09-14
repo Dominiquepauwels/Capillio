@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fade & Faro — Barber CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          display: ['Manrope', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          ink: {
+            950: '#0b0d10',
+            900: '#12151a',
+            850: '#171b22',
+            800: '#1c212a',
+            700: '#252b36',
+            600: '#333b49',
+            500: '#4a5568',
+          },
+          brand: {
+            50: '#eefdf5',
+            100: '#d7f9e6',
+            200: '#b1f2cd',
+            300: '#7de6ac',
+            400: '#43d187',
+            500: '#1eb86b',
+            600: '#149457',
+            700: '#137548',
+            800: '#135c3c',
+            900: '#124b33',
+          },
+        },
+        boxShadow: {
+          soft: '0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -8px rgba(0,0,0,0.5)',
+          glow: '0 0 0 1px rgba(30,184,107,0.25), 0 8px 30px -6px rgba(30,184,107,0.35)',
+        }
+      }
+    }
+  }
+</script>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-ink-950 text-slate-100 font-sans antialiased">
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<script type="text/babel" data-presets="react" src="supabase-client.js"></script>
+<script type="text/babel" data-presets="react" src="data.js"></script>
+<script type="text/babel" data-presets="react" src="whatsapp.js"></script>
+<script type="text/babel" data-presets="react" src="components.js"></script>
+<script type="text/babel" data-presets="react" src="site.js"></script>
+<script type="text/babel" data-presets="react" src="app.js"></script>
+</body>
+</html>

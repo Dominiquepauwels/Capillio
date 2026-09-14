@@ -1,0 +1,10 @@
+{
+  "name": "fade-and-faro",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Fade & Faro barber CRM — static frontend (no build step) + Vercel serverless functions under /api for real SMS sending via Twilio.",
+  "dependencies": {
+    "twilio": "^5.3.0",
+    "@supabase/supabase-js": "^2.45.4"
+  }
+}

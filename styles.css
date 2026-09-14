@@ -1,0 +1,43 @@
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a3140; border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: #3a4356; background-clip: padding-box; }
+
+* { scrollbar-width: thin; scrollbar-color: #2a3140 transparent; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.animate-fadeIn { animation: fadeIn .18s ease-out; }
+
+@keyframes popIn { from { opacity: 0; transform: scale(.96) translateY(6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.animate-popIn { animation: popIn .16s cubic-bezier(.2,.8,.3,1); }
+
+@keyframes pulseSoft { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+.animate-pulseSoft { animation: pulseSoft 1.8s ease-in-out infinite; }
+
+.grid-cal {
+  display: grid;
+  grid-template-columns: 56px repeat(var(--days, 3), minmax(0, 1fr));
+}
+
+.wa-bubble-tail-out::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: 0;
+  width: 0; height: 0;
+  border-top: 8px solid #005c4b;
+  border-right: 8px solid transparent;
+}
+
+.bg-wa-pattern {
+  background-color: #0b141a;
+  background-image: radial-gradient(#182229 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+.mask-fade-b {
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
+  mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
+}
