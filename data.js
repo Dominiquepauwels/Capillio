@@ -525,11 +525,20 @@ function normalizePhone(p) { return (p || '').replace(/\D/g, ''); }
 
 // ---- appointment mutations --------------------------------------------------
 function addAppointment(state, appt) {
-  const created = { ...appt, id: uid('a'), reminderSent: false, dayBeforeSent: false, reviewRequested: false, rating: null, reviewText: null };
+  const created = {
+    ...appt, id: uid('a'), createdAt: new Date().toISOString(),
+    reminderSent: false, dayBeforeSent: false, reviewRequested: false, rating: null, reviewText: null,
+  };
   Store.set(s => ({
     ...s,
     appointments: [...s.appointments, created],
-    clients: s.clients.map(c => c.id === appt.clientId ? { ...c, winbackSent: false } : c),
+    // Only touch the clients array (and so only sync that client's row) when
+    // there's an actual flag flip to make — avoids a no-op write attempt on
+    // every booking, which a guest client (no linked auth user) can't push
+    // to Supabase anyway since editing an existing row needs update rights.
+    clients: s.clients.some(c => c.id === appt.clientId && c.winbackSent)
+      ? s.clients.map(c => c.id === appt.clientId ? { ...c, winbackSent: false } : c)
+      : s.clients,
   }));
   applyReferralRewardIfEligible(created);
   return created;
@@ -908,18 +917,37 @@ async function fetchShopStateFromSupabase(shopId) {
   };
 }
 
-// Upserts every row of one collection and deletes any that were removed.
-// Re-sends the whole array rather than a granular per-field diff — simple,
-// idempotent, and plenty fast at a single barbershop's data volume.
+// Inserts brand-new rows, upserts genuinely-changed rows, and deletes any
+// that were removed — comparing by VALUE (not just array reference) because
+// call sites throughout the app routinely rebuild a collection with `.map()`
+// even when a given item's fields didn't actually change (e.g. resetting a
+// flag that's already false), which produces a new array/object reference
+// every time. Treating every reference change as a real edit would attempt
+// an update for rows nothing actually happened to — and Postgres requires
+// the UPDATE policy to pass for an upsert's ON CONFLICT DO UPDATE clause
+// even when no row actually conflicts, so a no-op "edit" to a guest's own
+// appointment (which never satisfies the staff/owner-only UPDATE policy)
+// would otherwise get rejected by RLS despite nothing needing to change.
 async function syncCollection(shopId, key, prevArr, nextArr) {
   const spec = TABLE_SPECS[key];
   try {
-    const prevIds = new Set((prevArr || []).map(x => x.id));
+    const prevById = new Map((prevArr || []).map(x => [x.id, x]));
     const nextIds = new Set((nextArr || []).map(x => x.id));
-    const removed = [...prevIds].filter(id => !nextIds.has(id));
-    const rows = (nextArr || []).map(x => spec.toRow(x, shopId));
-    if (rows.length) {
-      const { error } = await supabaseClient.from(spec.table).upsert(rows);
+    const removed = [...prevById.keys()].filter(id => !nextIds.has(id));
+    const added = [];
+    const changed = [];
+    (nextArr || []).forEach(item => {
+      const prevItem = prevById.get(item.id);
+      const row = spec.toRow(item, shopId);
+      if (!prevItem) added.push(row);
+      else if (JSON.stringify(spec.toRow(prevItem, shopId)) !== JSON.stringify(row)) changed.push(row);
+    });
+    if (added.length) {
+      const { error } = await supabaseClient.from(spec.table).insert(added);
+      if (error) console.warn('Supabase insert failed for', key, error.message);
+    }
+    if (changed.length) {
+      const { error } = await supabaseClient.from(spec.table).upsert(changed);
       if (error) console.warn('Supabase upsert failed for', key, error.message);
     }
     if (removed.length) {
