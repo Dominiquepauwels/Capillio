@@ -302,6 +302,18 @@ const Store = {
     try { localStorage.setItem(shopStorageKey(this.shopId), JSON.stringify(this.state)); } catch (e) {}
     this.listeners.forEach(fn => fn(this.state));
     syncStateToSupabase(this.shopId, prev, this.state);
+    // Auto-send any message that was just queued (confirmation, reminder,
+    // review, win-back, referral reward, broadcast, ...) the instant it
+    // appears — a real customer shouldn't wait on staff to click Send for
+    // something as basic as their own booking confirmation. sendMessage()
+    // itself still no-ops down to the old simulated flip when Twilio/
+    // Supabase aren't connected, so this is harmless before that's set up.
+    if (this.state.messages !== prev.messages) {
+      const prevIds = new Set(prev.messages.map(m => m.id));
+      this.state.messages.forEach(m => {
+        if (m.status === 'pending' && !prevIds.has(m.id)) sendMessage(m.id);
+      });
+    }
   },
   subscribe(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); },
   reset() { this.set(seedState()); },

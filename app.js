@@ -491,9 +491,13 @@ function MessagesPage({ state }) {
       {tab === 'conversations' ? <ConversationsPage state={state} /> : (
       <>
       <div className="bg-ink-850 border border-ink-700 rounded-2xl px-5 py-4 mb-5 flex items-start gap-3.5">
-        <div className="w-9 h-9 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0"><Icon name="bell" className="w-4.5 h-4.5" /></div>
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${SUPABASE_CONFIGURED ? 'bg-brand-500/15 text-brand-400' : 'bg-amber-500/15 text-amber-400'}`}><Icon name="bell" className="w-4.5 h-4.5" /></div>
         <div className="text-sm text-slate-400">
-          <span className="text-slate-200 font-medium">WhatsApp isn't connected yet.</span> Reminders auto-queue ~1 hour before each appointment, and review requests queue ~1 hour after a completed visit. Hit <span className="text-slate-200">Send</span> below to simulate delivery — wire this panel up to the WhatsApp Business API (e.g. Twilio or Meta Cloud API) to make it live.
+          {SUPABASE_CONFIGURED ? (
+            <><span className="text-slate-200 font-medium">Real SMS is live.</span> Reminders auto-queue ~1 hour before each appointment and review requests ~1 hour after a completed visit — every message sends automatically over Twilio the moment it's queued. The list below is a log; <span className="text-slate-200">Send</span> only matters for retrying one that failed.</>
+          ) : (
+            <><span className="text-slate-200 font-medium">WhatsApp isn't connected yet.</span> Reminders auto-queue ~1 hour before each appointment, and review requests queue ~1 hour after a completed visit. Hit <span className="text-slate-200">Send</span> below to simulate delivery — connect Supabase/Twilio (see supabase-client.js) to make it live.</>
+          )}
         </div>
       </div>
 
@@ -547,11 +551,14 @@ function MessagesPage({ state }) {
               <div className="w-full max-w-[300px] mt-5 space-y-2.5">
                 <div className="text-xs text-slate-500 flex justify-between"><span>Appointment</span><span className="text-slate-300">{appt ? fmtDateTime(appt.start) : '—'}</span></div>
                 <div className="text-xs text-slate-500 flex justify-between"><span>Barber</span><span className="text-slate-300">{barber ? barber.name : '—'}</span></div>
-                <div className="text-xs text-slate-500 flex justify-between"><span>Status</span><Badge tone={selected.status === 'sent' ? 'green' : 'amber'}>{selected.status}</Badge></div>
-                {selected.status === 'pending' ? (
-                  <Button className="w-full mt-2" onClick={() => sendMessage(selected.id)}><Icon name="send" className="w-4 h-4" />Send via WhatsApp (simulated)</Button>
-                ) : (
+                <div className="text-xs text-slate-500 flex justify-between"><span>Status</span><Badge tone={selected.status === 'sent' ? 'green' : selected.status === 'failed' ? 'red' : 'amber'}>{selected.status}</Badge></div>
+                {selected.status === 'sent' ? (
                   <div className="w-full mt-2 text-center text-xs text-brand-400 flex items-center justify-center gap-1.5"><Icon name="check" className="w-3.5 h-3.5" />Sent {fmtDateTime(selected.sentAt)}</div>
+                ) : (
+                  <Button className="w-full mt-2" onClick={() => sendMessage(selected.id)}>
+                    <Icon name="send" className="w-4 h-4" />
+                    {selected.status === 'failed' ? 'Retry send' : SUPABASE_CONFIGURED ? 'Send via SMS' : 'Send via WhatsApp (simulated)'}
+                  </Button>
                 )}
                 <Button variant="ghost" className="w-full" onClick={() => deleteMessage(selected.id)}><Icon name="trash" className="w-3.5 h-3.5" />Discard</Button>
               </div>
